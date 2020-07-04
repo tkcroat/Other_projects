@@ -10,17 +10,20 @@ if 'C:\\Users\\tkc\\Documents\\Python_Scripts\\Other_projects\\Fin' not in sys.p
     sys.path.append('C:\\Users\\tkc\\Documents\\Python_Scripts\\Other_projects\\Fin')
 import fin_functions as fin
 import glob
+
+import gsheet_functions as gs
 #%%
 from importlib import reload
 reload(fin)
 #%% Update stock quotes in financial projections
-os.chdir('C:\\Users\\tkc\\Documents\\Fin\\')
-quotes=pd.read_excel('financial_projections.xlsx',sheetname='Quotes')
+# Pull quote df and symbol names from fin_projections (google sheet)
+sheetID = '13bVS-Q7-D2Yz0lDN7qojVoYuM7oZbQcIqau52-rTXqw'
+pyGsheet, quotes = gs.readProcessGsheet(sheetID, **{'title':'Quotes'})
 
 quotes=fin.lookup_quotes_cnbc(quotes) 
 quotes=fin.lookup_TSP(quotes) # TSP lookup scraped from tsp website
+fin.updateGsheetQuotes(pyGsheet, quotes)  # Write updated quotes back to pyGsheet
 
-fin.writetoxls(quotes, 'Quotes', 'financial_projections.xlsx') # write back to xls quotes tab
 #%%  mypay reader (prep for salary info)
 fname="C:\\Temp\\myPay.html"
 vals=fin.readMyPay(fname)

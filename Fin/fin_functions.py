@@ -280,9 +280,13 @@ def lookup_quotes_cnbc(quotes):
         # TESTING index=1 row=quotes.loc[index]
         if ' Fund' in row.Symbol:
             continue
-        with urllib.request.urlopen(base_url + row.Symbol) as url:
-            content = url.read()
-        content=content.decode("utf-8")
+        try:
+            with urllib.request.urlopen(base_url + row.Symbol) as url:
+                content = url.read()
+            content=content.decode("utf-8")
+        except:
+            print('No quote found for {}'.format(row.Symbol))
+            continue
         startpos=content.find('"last":')+8
         match=re.match(r'\d+.\d+', content[startpos:startpos+10])        
         if match:
@@ -294,6 +298,16 @@ def lookup_quotes_cnbc(quotes):
             print(row.Symbol, ' not updated ', )
         time.sleep(0.1)
     return quotes
+
+def updateGsheetQuotes(pyGsheet, quotes):
+    ''' After stock quote web scrape, update gsheet w/ new values
+    args: 
+        pyGsheet - gsheets connection to quotes worksheet within fin_projection sheet
+        quote - dataframe w/ new values
+    '''    
+    pyGsheet.update_col(2,  quotes.Price.tolist(), row_offset=1) # 1 is first col for gsheets
+    pyGsheet.update_col(3,  quotes.Last_update.tolist(), row_offset=1)
+    return 
 
 def lookup_TSP(quotes):
     '''

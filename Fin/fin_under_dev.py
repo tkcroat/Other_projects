@@ -7,15 +7,27 @@ from lxml import html
 import itertools as it
 from operator import itemgetter
 import numpy as np
+import matplotlib.pyplot as plt
+
+import gsheet_functions as gs
 # Determine TSP shares & price on purchase day
 # need BalanceByFund for all dates incl previous
+
 
 #%%
 def matchDuplTrans(allCC, Aptexp, colset):
     '''  
-    '''    
-    ccdups=allCC[allCC.duplicated(colset, keep=False)]
+    '''
+    # remove drop transactions (unrelated categories)
+    ccsub=allCC[ (allCC['Matched']=='') | (pd.isnull(allCC['Matched']))]
+    ccdups=ccsub[ccsub.duplicated(colset, keep=False)]
     aptdups=Aptexp[Aptexp.duplicated(colset, keep=False)]
+    indsCC=[]
+    indsExp=[]
+    # Process each duplicated subgroup 
+    grouped=ccdups.groupby(colset)
+    for cols, gr in grouped:
+        
 
 def matchTransactions(allCC, Aptexp, colset):
     '''

@@ -5,13 +5,20 @@ import os
 import glob
 from lxml import html
 import itertools as it
-from operator import itemgetter
+from operator import ofxtools
+
 import numpy as np
 import matplotlib.pyplot as plt
 
 import gsheet_functions as gs
 # Determine TSP shares & price on purchase day
 # need BalanceByFund for all dates incl previous
+
+#%%  Attempts to open/convert old Quicken file
+from ofxtools.Parser import OFXTree
+parser = OFXTree()
+with open('Croat.qxf', 'rb') as f:
+    parser.parse(f)
 
 
 #%%

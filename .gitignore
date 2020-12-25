@@ -1,0 +1,6 @@
+modules/__pycache__/*.pyc
+*.pyc
+*.bat
+*/*.bat
+*/*.pyc
+*/*/*.pyc

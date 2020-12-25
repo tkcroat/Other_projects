@@ -6,15 +6,16 @@ Created on Thu May  4 13:51:32 2017
 """
 import os, sys
 import pandas as pd
-if 'C:\\Users\\tkc\\Documents\\Python_Scripts\\Other_projects\\Fin' not in sys.path:
-    sys.path.append('C:\\Users\\tkc\\Documents\\Python_Scripts\\Other_projects\\Fin')
+if 'C:\\Users\\kcroa\\KC_Code\\Other_projects\\Fin' not in sys.path:
+    sys.path.append('C:\\Users\\kcroa\\KC_Code\\Other_projects\\Fin')
+if 'C:\\Users\\kcroa\\KC_Code\\Other_projects' not in sys.path:
+    sys.path.append('C:\\Users\\kcroa\\KC_Code\\Other_projects')
+
 import fin_functions as fin
 import glob
 
-import gsheet_functions as gs
-#%%
-from importlib import reload
-reload(fin)
+import Other_projects.gsheet_functions as gs
+
 #%% Update stock quotes in financial projections
 # Pull quote df and symbol names from fin_projections (google sheet)
 sheetID = '13bVS-Q7-D2Yz0lDN7qojVoYuM7oZbQcIqau52-rTXqw'
@@ -22,6 +23,7 @@ pyGsheet, quotes = gs.readProcessGsheet(sheetID, **{'title':'Quotes'})
 
 quotes=fin.lookup_quotes_cnbc(quotes) 
 quotes=fin.lookup_TSP(quotes) # TSP lookup scraped from tsp website
+quotes=fin.lookup_TSP(quotes)
 fin.updateGsheetQuotes(pyGsheet, quotes)  # Write updated quotes back to pyGsheet
 
 #%%  mypay reader (prep for salary info)

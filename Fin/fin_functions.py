@@ -10,11 +10,14 @@ import urllib
 import re
 import pandas as pd
 import numpy as np
-from datetime import timedelta
-from datetime import datetime
+from datetime import datetime, timedelta, date
+
 from openpyxl import load_workbook # writing to Excel
 import time
 from lxml import html
+import requests # for TSP request
+import csv
+
 
 from lxml import etree # for config.xml reader 
 from io import StringIO, BytesIO
@@ -310,10 +313,71 @@ def updateGsheetQuotes(pyGsheet, quotes):
     return 
 
 def lookup_TSP(quotes):
+    ''' Request recent quotes through RESTFUL API... pulled from TSP-scrape gitlab
+    grabs last 7 days but keeps only 2nd row (most recent)
+    
+    args: 
+        quotes -- 
+        
+    https://www.bogleheads.org/forum/viewtopic.php?f=1&t=108388
+
+    ''' 
+    fundTag = {
+    'Linc'  : 'TSPLINCOME',
+    'L2025' : 'TSPL2025',
+    'L2030' : 'TSPL2030',
+    'L2035' : 'TSPL2035',
+    'L2040' : 'TSPL2040',
+    'L2045' : 'TSPL2045',
+    'L2050' : 'TSPL2050',
+    'L2055' : 'TSPL2055',
+    'L2060' : 'TSPL2060',
+    'L2065' : 'TSPL2065',
+    'G'     : 'TSPGFUND',
+    'F'     : 'TSPFFUND',
+    'C'     : 'TSPCFUND',
+    'S'     : 'TSPSFUND',
+    'I'     : 'TSPIFUND'}
+    
+    endDate = date.today().strftime('%Y%m%d')
+    startDate=(date.today()-timedelta(days=7)).strftime('%Y%m%d')
+    
+    print('Checking for new prices starting on', startDate)
+    tspSharePricePageUrl = 'https://secure.tsp.gov/components/CORS/getSharePrices.html'
+    # fundStrings = ['{}=1'.format(fund) for fund in fundTag.keys()]
+    # datestring format is YYYYMMDD
+    dateStrings = ['startdate={}'.format(startDate),
+                   'enddate={}'.format(endDate),
+                   'format=CSV', 'download=1']
+    fundStrings = ['{}=1'.format(fund) for fund in fundTag.keys()]
+    restString = '?' +  '&'.join(dateStrings + fundStrings)
+    
+    page = requests.get(tspSharePricePageUrl+restString)
+    
+    reader = csv.reader(page.text.splitlines(), delimiter=',')
+    rows = [row for row in reader if len(row) > 0]
+    newQuotes={}
+    for i, val in enumerate(rows[0]):
+        newQuotes[val.strip()]= rows[1][i].strip()
+    
+    for index, row in quotes.iterrows():
+        if 'Fund' in row.Symbol:
+            newVal=newQuotes.get(row.Symbol.split()[0])
+            thisDate=newQuotes.get('date')
+            quotes.loc[index, 'Price']= float(newVal)
+            # reformat date string from YYYY-MM-DD to MM/DD/YYYY
+            quotes.loc[index, 'Last_update']= '{}/{}/{}'.format(thisDate.split('-')[1],
+                      thisDate.split('-')[2], thisDate.split('-')[0])
+            print('{} Fund price updated to {}'.format(row.Symbol.split()[0], newVal))
+    return quotes
+
+def lookup_TSP_old(quotes):
     '''
     No TSP ticker at alphavantage... pull from tsp website
+    24Dec2020 no longer directly scrapable... have to request from CORS site
     '''
     base_url='https://www.tsp.gov/InvestmentFunds/FundPerformance/index.html'
+    base_url='https://www.tsp.gov/fund-performance/share-price-history/'
     with urllib.request.urlopen(base_url) as url:
         content = url.read()
     content=content.decode("utf-8")
